@@ -1,28 +1,41 @@
 :root {
-  --bg: #fafafa;
-  --fg: #1a1a1a;
-  --accent: #0070f3;
-  --sidebar-bg: #ffffff;
-  --border: #eaeaea;
+  --bg: #0b0b0b;
+  --fg: #e0e0e0;
+  --accent: #bb86fc; /* Muted Purple */
+  --sidebar-bg: #121212;
+  --border: #2e2e2e;
+  --code-fg: #64ffda; /* Terminal Green */
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Global Fix for Overflow and Layout */
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  padding: 0;
+  font-family: var(--font-mono);
   background-color: var(--bg);
   color: var(--fg);
+  overflow: hidden; /* Prevent body scroll for full-page app experience */
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Header: Sleek & Fixed */
 .zen-header {
-  margin-bottom: 3rem;
+  padding: 1rem 2rem;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 1rem;
+  background: var(--bg);
+  z-index: 100;
+  width: 100%;
 }
 
 .header-top {
@@ -31,148 +44,203 @@ body {
   align-items: center;
 }
 
+.zen-header h1 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+  color: var(--code-fg);
+}
+
+.zen-header h1::before {
+  content: '> ';
+}
+
 .toggle-btn {
   background: transparent;
   border: 1px solid var(--border);
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--fg);
   transition: all 0.2s;
 }
 
 .toggle-btn:hover {
-  background: var(--fg);
-  color: white;
-  border-color: var(--fg);
+  background: var(--border);
+  color: var(--code-fg);
 }
 
-.graph-container {
-  flex: 1;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  height: 600px;
-  overflow: hidden;
-}
-
-.zen-header h1 {
-  font-size: 2.5rem;
-  font-weight: 300;
-  margin: 0;
-}
-
-.zen-header p {
-  font-size: 1.1rem;
-  font-weight: 300;
-  color: #666;
-  margin: 0.5rem 0 0;
-}
-
+/* Main Layout: Full Page */
 .zen-main {
+  flex: 1;
   display: flex;
-  gap: 3rem;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
 }
 
+/* Ghost Sidebar: Appears on Hover */
 .zen-sidebar {
-  flex: 1;
-  max-width: 300px;
+  width: 280px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  padding: 1.5rem;
+  position: absolute;
+  top: 0;
+  left: -280px; /* Hidden by default */
+  height: 100%;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 90;
+  overflow-y: auto;
+}
+
+.zen-sidebar:hover,
+.sidebar-trigger:hover + .zen-sidebar {
+  transform: translateX(280px);
+}
+
+.sidebar-trigger {
+  width: 12px;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 95;
 }
 
 .zen-sidebar h3 {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #999;
-  margin-bottom: 1rem;
+  color: #666;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.05em;
 }
 
+/* Ingest Form Fixes */
 .upload-section {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
-.upload-section input {
+.upload-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.upload-section input[type="file"] {
   width: 100%;
-  margin-bottom: 0.5rem;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: #888;
+  padding: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  cursor: pointer;
 }
 
 .upload-section button {
-  background: var(--fg);
-  color: white;
+  width: 100%;
+  background: var(--code-fg);
+  color: #000;
   border: none;
-  padding: 0.6rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.6rem;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 2px;
+  transition: opacity 0.2s;
+}
+
+.upload-section button:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
 .upload-section button:disabled {
-  opacity: 0.5;
+  background: var(--border);
+  color: #666;
+  cursor: not-allowed;
 }
 
+/* Wiki Pages List */
 .pages-section ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .pages-section li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 0;
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.2s;
+  font-size: 0.85rem;
+  color: #aaa;
+  transition: color 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pages-section li:hover {
-  color: var(--accent);
+  color: var(--code-fg);
 }
 
 .pages-section li.active {
-  font-weight: bold;
+  color: var(--accent);
 }
 
+.pages-section li::before { content: '[[ '; color: #444; }
+.pages-section li::after { content: ' ]]'; color: #444; }
+
+/* Content Area: Zen Flow Typography */
 .zen-content {
-  flex: 3;
-  background-color: #ffffff;
-  padding: 2rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  min-height: 500px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 4rem 2rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.wiki-content {
+  max-width: 800px;
+  width: 100%;
+  line-height: 1.8;
+  font-size: 1.05rem;
 }
 
 .wiki-content h2 {
-  font-weight: 400;
   font-size: 2rem;
-  margin-top: 0;
+  font-weight: 400;
+  margin-bottom: 2.5rem;
+  color: var(--code-fg);
 }
 
 .markdown-render {
-  line-height: 1.7;
-  font-size: 1.1rem;
-  color: #333;
+  color: var(--fg);
+  font-weight: 300;
 }
 
+/* Graph Container: 100% Immersive */
+.graph-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  background: var(--bg);
+}
+
+/* Welcome Screen */
 .welcome {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #999;
+  color: #444;
   font-weight: 300;
-  font-size: 1.2rem;
-}
-
-.sources-footer {
-  margin-top: 3rem;
-  color: #666;
-}
-
-.sources-footer h4 {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-}
-
-.sources-footer ul {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
+  text-align: center;
 }

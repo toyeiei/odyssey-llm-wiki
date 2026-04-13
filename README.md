@@ -32,10 +32,10 @@ npx wrangler vectorize create odyssey-llm-wiki-index --dimensions=768 --metric=c
 Update the `database_id` in `apps/api/wrangler.toml` and `apps/ingestor/wrangler.toml` with the ID returned by the D1 create command.
 
 ### 2. Initialize Database
-Apply the schema to your D1 database:
+Apply the schema to your D1 database (ensure you're in the project root):
 
 ```bash
-npx wrangler d1 execute odyssey-llm-wiki-db --file=packages/shared/src/schema.sql
+npx wrangler d1 execute odyssey-llm-wiki-db --local --file=packages/shared/src/schema.sql --config apps/api/wrangler.toml
 ```
 
 ### 3. Local Development

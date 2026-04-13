@@ -70,57 +70,56 @@ function App() {
       </header>
 
       <main className="zen-main">
+        <div className="sidebar-trigger"></div>
+        <aside className="zen-sidebar">
+          <section className="upload-section">
+            <h3>Ingest Source</h3>
+            <form onSubmit={handleUpload}>
+              <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+              <button type="submit" disabled={uploading || !file}>
+                {uploading ? 'Processing...' : 'Upload'}
+              </button>
+            </form>
+          </section>
+
+          <section className="pages-section">
+            <h3>Wiki Pages</h3>
+            <ul>
+              {pages.map((p) => (
+                <li key={p.id} onClick={() => selectPage(p.slug)} className={selectedPage?.page?.slug === p.slug ? 'active' : ''}>
+                  {p.title}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </aside>
+
         {isGraphView ? (
           <GraphView onNodeClick={selectPage} apiUrl={API_URL} />
         ) : (
-          <>
-            <aside className="zen-sidebar">
-              <section className="upload-section">
-                <h3>Ingest Source</h3>
-                <form onSubmit={handleUpload}>
-                  <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-                  <button type="submit" disabled={uploading || !file}>
-                    {uploading ? 'Processing...' : 'Upload'}
-                  </button>
-                </form>
-              </section>
-
-              <section className="pages-section">
-                <h3>Wiki Pages</h3>
-                <ul>
-                  {pages.map((p) => (
-                    <li key={p.id} onClick={() => selectPage(p.slug)} className={selectedPage?.page?.slug === p.slug ? 'active' : ''}>
-                      {p.title}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            </aside>
-
-            <article className="zen-content">
-              {selectedPage ? (
-                <div className="wiki-content">
-                  <h2>{selectedPage.page.title}</h2>
-                  <div className="markdown-render">
-                    {selectedPage.content}
-                  </div>
-                  <footer className="sources-footer">
-                    <hr />
-                    <h4>Sources:</h4>
-                    <ul>
-                      {selectedPage.sources.map((s: any) => (
-                        <li key={s.id}>{s.name}</li>
-                      ))}
-                    </ul>
-                  </footer>
+          <article className="zen-content">
+            {selectedPage ? (
+              <div className="wiki-content">
+                <h2>{selectedPage.page.title}</h2>
+                <div className="markdown-render">
+                  {selectedPage.content}
                 </div>
-              ) : (
-                <div className="welcome">
-                  Select a page or upload a new source to begin.
-                </div>
-              )}
-            </article>
-          </>
+                <footer className="sources-footer">
+                  <hr />
+                  <h4>Sources:</h4>
+                  <ul>
+                    {selectedPage.sources.map((s: any) => (
+                      <li key={s.id}>{s.name}</li>
+                    ))}
+                  </ul>
+                </footer>
+              </div>
+            ) : (
+              <div className="welcome">
+                Select a page or hover left for the index.
+              </div>
+            )}
+          </article>
         )}
       </main>
     </div>

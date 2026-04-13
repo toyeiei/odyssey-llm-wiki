@@ -42,27 +42,26 @@ const GraphView = ({ onNodeClick, apiUrl }: GraphViewProps) => {
       <ForceGraph2D
         ref={fgRef}
         graphData={data}
+        backgroundColor="#0b0b0b"
         nodeLabel="name"
         onNodeClick={(node: any) => onNodeClick(node.slug)}
         nodeAutoColorBy="id"
         linkDirectionalArrowLength={3.5}
         linkDirectionalArrowRelPos={1}
+        linkColor={() => 'rgba(255, 255, 255, 0.1)'}
         nodeCanvasObject={(node: any, ctx, globalScale) => {
           const label = node.name
-          const fontSize = 12 / globalScale
-          ctx.font = `${fontSize}px Sans-Serif`
+          const fontSize = 14 / globalScale
+          ctx.font = `${fontSize}px 'JetBrains Mono'`
           const textWidth = ctx.measureText(label).width
           const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2) as [number, number]
-
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
-          ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1])
 
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillStyle = node.color
           ctx.fillText(label, node.x, node.y)
 
-          node.__bckgDimensions = bckgDimensions // to use in nodePointerAreaPaint
+          node.__bckgDimensions = bckgDimensions
         }}
         nodePointerAreaPaint={(node: any, color, ctx) => {
           ctx.fillStyle = color
