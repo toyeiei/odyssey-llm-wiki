@@ -16,7 +16,7 @@ describe('Odyssey LLM Wiki Frontend', () => {
 
   it('should show the welcome message by default', async () => {
     render(<App />)
-    expect(screen.getByText(/Select a page or upload a new source to begin/i)).toBeDefined()
+    expect(screen.getByText(/\$ odyssey-llm-wiki --help/i)).toBeDefined()
   })
 
   it('should have a toggle button for graph view', () => {

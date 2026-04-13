@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import GraphView from './GraphView'
+import CommandPalette from './CommandPalette'
 
 interface Page {
   id: string
@@ -15,11 +16,27 @@ function App() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [isGraphView, setIsGraphView] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false)
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787'
 
   useEffect(() => {
     fetchPages()
+
+    const handleGlobalKeys = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsPaletteOpen(prev => !prev)
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault()
+        setIsSidebarOpen(prev => !prev)
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalKeys)
+    return () => window.removeEventListener('keydown', handleGlobalKeys)
   }, [])
 
   const fetchPages = async () => {
@@ -54,24 +71,41 @@ function App() {
     const res = await fetch(`${API_URL}/api/pages/${slug}`)
     const data = await res.json()
     setSelectedPage(data)
-    setIsGraphView(false) // Switch back to page view when a page is selected from the graph
+    setIsGraphView(false)
+    setIsSidebarOpen(false)
   }
 
   return (
     <div className="container">
+      <CommandPalette
+        isOpen={isPaletteOpen}
+        onClose={() => setIsPaletteOpen(false)}
+        pages={pages}
+        onSelect={selectPage}
+      />
+
       <header className="zen-header">
         <div className="header-top">
-          <h1>Odyssey LLM Wiki</h1>
-          <button className="toggle-btn" onClick={() => setIsGraphView(!isGraphView)}>
-            {isGraphView ? 'Wiki View' : 'Graph View'}
-          </button>
+          <div className="header-left">
+            <button className="toggle-btn" onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={{ marginRight: '1rem' }}>
+              Menu
+            </button>
+            <h1>Odyssey LLM Wiki</h1>
+          </div>
+          <div className="header-right">
+            <span style={{ fontSize: '0.7rem', color: '#444', marginRight: '1rem' }}>
+              CTRL+K to Search | CTRL+B for Menu
+            </span>
+            <button className="toggle-btn" onClick={() => setIsGraphView(!isGraphView)}>
+              {isGraphView ? 'Wiki View' : 'Graph View'}
+            </button>
+          </div>
         </div>
-        <p>A persistent, compounding knowledge base.</p>
       </header>
 
       <main className="zen-main">
-        <div className="sidebar-trigger"></div>
-        <aside className="zen-sidebar">
+        {isSidebarOpen && <div className="palette-overlay" style={{ background: 'transparent', zIndex: 80 }} onClick={() => setIsSidebarOpen(false)}></div>}
+        <aside className={`zen-sidebar ${isSidebarOpen ? 'open' : ''}`}>
           <section className="upload-section">
             <h3>Ingest Source</h3>
             <form onSubmit={handleUpload}>
@@ -116,7 +150,9 @@ function App() {
               </div>
             ) : (
               <div className="welcome">
-                Select a page or hover left for the index.
+                $ odyssey-llm-wiki --help<br/><br/>
+                Press CTRL+K to search your knowledge base.<br/>
+                Press CTRL+B to open the ingestion panel.
               </div>
             )}
           </article>
