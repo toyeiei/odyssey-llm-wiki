@@ -13,6 +13,7 @@
   "dependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@uiw/react-md-editor": "^4.1.0",
     "jsdom": "^29.0.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

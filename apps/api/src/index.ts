@@ -70,7 +70,7 @@ app.post('/api/sources/upload', async (c) => {
   if (!file) return c.json({ error: 'No file uploaded' }, 400)
 
   const id = crypto.randomUUID()
-  const key = `sources/${id}/${file.name}`
+  const key = `raw/${id}/${file.name}`
   
   // 1. Upload to R2
   await c.env.RAW_SOURCES.put(key, file.stream())
@@ -84,6 +84,50 @@ app.post('/api/sources/upload', async (c) => {
   await c.env.INGESTION_QUEUE.send({ sourceId: id, sourceKey: key })
 
   return c.json({ message: 'Ingestion initiated.', sourceId: id })
+})
+
+// Endpoint to manually save/update a wiki page
+app.post('/api/pages/:slug', async (c) => {
+  const slug = c.req.param('slug')
+  const { content } = await c.req.json()
+  
+  const page = await c.env.DB.prepare(
+    'SELECT * FROM wiki_pages WHERE slug = ?'
+  ).bind(slug).first()
+  
+  if (!page) return c.json({ error: 'Page not found' }, 404)
+
+  // 1. Update R2
+  await c.env.WIKI_PAGES.put((page as any).content_key, content)
+
+  // 2. Update updated_at in D1
+  await c.env.DB.prepare(
+    'UPDATE wiki_pages SET updated_at = CURRENT_TIMESTAMP WHERE slug = ?'
+  ).bind(slug).run()
+
+  return c.json({ message: 'Page updated successfully.' })
+})
+
+// Endpoint to initialize the Karpathy-native structure (Core files)
+app.post('/api/init', async (c) => {
+  const coreFiles = [
+    { title: 'Brain Instructions', slug: 'brain-instruction', key: 'brain/instruction.md', content: '# Odyssey Brain\nYou are a world-class bookkeeper.' },
+    { title: 'Wiki Index', slug: 'wiki-index', key: 'wiki/index.md', content: '# Wiki Index\nWelcome to your knowledge base.' },
+    { title: 'Audit Log', slug: 'wiki-log', key: 'wiki/log.md', content: '# Audit Log\nRecord of all ingestion runs.' }
+  ]
+
+  for (const file of coreFiles) {
+    const existing = await c.env.DB.prepare('SELECT id FROM wiki_pages WHERE slug = ?').bind(file.slug).first()
+    if (!existing) {
+      const id = crypto.randomUUID()
+      await c.env.WIKI_PAGES.put(file.key, file.content)
+      await c.env.DB.prepare(
+        'INSERT INTO wiki_pages (id, title, content_key, slug) VALUES (?, ?, ?, ?)'
+      ).bind(id, file.title, file.key, file.slug).run()
+    }
+  }
+
+  return c.json({ message: 'Karpathy structure initialized.' })
 })
 
 export default app

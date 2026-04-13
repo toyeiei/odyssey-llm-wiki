@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import GraphView from './GraphView'
 import CommandPalette from './CommandPalette'
+import MDEditor from '@uiw/react-md-editor'
 
 interface Page {
   id: string
@@ -13,6 +14,8 @@ interface Page {
 function App() {
   const [pages, setPages] = useState<Page[]>([])
   const [selectedPage, setSelectedPage] = useState<any>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editContent, setEditContent] = useState<string | undefined>('')
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [isGraphView, setIsGraphView] = useState(false)
@@ -71,12 +74,35 @@ function App() {
     const res = await fetch(`${API_URL}/api/pages/${slug}`)
     const data = await res.json()
     setSelectedPage(data)
+    setEditContent(data.content)
+    setIsEditing(false)
     setIsGraphView(false)
     setIsSidebarOpen(false)
   }
 
+  const handleSave = async () => {
+    if (!selectedPage || !editContent) return
+    
+    try {
+      const res = await fetch(`${API_URL}/api/pages/${selectedPage.page.slug}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editContent })
+      })
+      
+      if (res.ok) {
+        setSelectedPage({ ...selectedPage, content: editContent })
+        setIsEditing(false)
+        fetchPages()
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Failed to save page.')
+    }
+  }
+
   return (
-    <div className="container">
+    <div className="container" data-color-mode="dark">
       <CommandPalette
         isOpen={isPaletteOpen}
         onClose={() => setIsPaletteOpen(false)}
@@ -134,19 +160,46 @@ function App() {
           <article className="zen-content">
             {selectedPage ? (
               <div className="wiki-content">
-                <h2>{selectedPage.page.title}</h2>
-                <div className="markdown-render">
-                  {selectedPage.content}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+                  <h2 style={{ margin: 0 }}>{selectedPage.page.title}</h2>
+                  <div>
+                    {!isEditing ? (
+                      <button className="toggle-btn" onClick={() => setIsEditing(true)}>Edit</button>
+                    ) : (
+                      <>
+                        <button className="toggle-btn" onClick={handleSave} style={{ color: 'var(--code-fg)', borderColor: 'var(--code-fg)', marginRight: '0.5rem' }}>Save</button>
+                        <button className="toggle-btn" onClick={() => setIsEditing(false)}>Cancel</button>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <footer className="sources-footer">
-                  <hr />
-                  <h4>Sources:</h4>
-                  <ul>
-                    {selectedPage.sources.map((s: any) => (
-                      <li key={s.id}>{s.name}</li>
-                    ))}
-                  </ul>
-                </footer>
+
+                {isEditing ? (
+                  <div className="editor-container">
+                    <MDEditor
+                      value={editContent}
+                      onChange={setEditContent}
+                      preview="edit"
+                      height={500}
+                    />
+                  </div>
+                ) : (
+                  <div className="markdown-render">
+                    <MDEditor.Markdown source={selectedPage.content} />
+                  </div>
+                )}
+
+                {!isEditing && (
+                  <footer className="sources-footer">
+                    <hr />
+                    <h4>Sources:</h4>
+                    <ul>
+                      {selectedPage.sources.map((s: any) => (
+                        <li key={s.id}>{s.name}</li>
+                      ))}
+                    </ul>
+                  </footer>
+                )}
               </div>
             ) : (
               <div className="welcome">
