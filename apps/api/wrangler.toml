@@ -18,3 +18,10 @@ bucket_name = "odyssey-llm-wiki-pages"
 [[queues.producers]]
 queue = "odyssey-llm-wiki-ingestion-queue"
 binding = "INGESTION_QUEUE"
+
+[ai]
+binding = "AI"
+
+[[vectorize]]
+binding = "VECTORIZE_INDEX"
+index_name = "odyssey-llm-wiki-index"

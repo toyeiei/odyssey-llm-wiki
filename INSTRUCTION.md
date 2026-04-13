@@ -33,7 +33,15 @@ The AI is your bookkeeper; you are the curator.
 - **Use [[Wiki-Links]]:** Manually link concepts inside your pages. The AI will learn these connections and begin linking them automatically on future ingests.
 - **Graph View:** Click "Graph View" to visualize how your knowledge is interlinking and growing.
 
-## 5. Maintenance
+## 5. Odyssey Scribble (Active Curation)
+Odyssey is not just for reading; it's for **thinking.** Use the Writer app for distraction-free "Scribbling."
+1.  **Launch:** Run `cd apps/writer && npm run dev`.
+2.  **Write:** Open `http://localhost:5174`. The 100% full-width, True Black editor is built for focus.
+3.  **Connect:** Use `[[Page Title]]` while writing to link your thoughts to existing AI-ingested chapters.
+4.  **Visualize:** Click the **Globe Orb** in the corner to see your manual thoughts interweaving with the AI's knowledge in real-time.
+5.  **Save:** Use **CTRL+S**. Your note will be instantly saved, linked, and **Vectorized** so it influences future AI ingests.
+
+## 6. Maintenance
 - **Monitor the Log:** Always check `wiki/log.md` if you need to trace what the system has processed.
 - **Manage the Index:** Keep `wiki/index.md` clean to ensure you have a structured map of your evolving knowledge.
 

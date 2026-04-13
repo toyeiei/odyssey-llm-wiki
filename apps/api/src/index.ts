@@ -6,11 +6,53 @@ type Bindings = {
   RAW_SOURCES: R2Bucket
   WIKI_PAGES: R2Bucket
   INGESTION_QUEUE: Queue
+  AI: any
+  VECTORIZE_INDEX: any
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
 
 app.use('*', cors())
+
+// ... existing routes ...
+
+// Endpoint to save manual scribbles
+app.post('/api/scribbles', async (c) => {
+  const { title, content } = await c.req.json()
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  const id = crypto.randomUUID()
+  const contentKey = `wiki/scribbles/${id}.md`
+
+  // 1. Save to R2
+  await c.env.WIKI_PAGES.put(contentKey, content)
+
+  // 2. Insert into D1
+  await c.env.DB.prepare(
+    'INSERT INTO wiki_pages (id, title, content_key, slug) VALUES (?, ?, ?, ?)'
+  ).bind(id, title, contentKey, slug).run()
+
+  // 3. Parse Wikilinks
+  const linkMatches = [...content.matchAll(/\[\[(.+?)\]\]/g)]
+  for (const match of linkMatches) {
+    const targetTitle = match[1]
+    const targetPage = await c.env.DB.prepare(
+      'SELECT id FROM wiki_pages WHERE title = ?'
+    ).bind(targetTitle).first()
+    
+    if (targetPage) {
+      await c.env.DB.prepare(
+        'INSERT OR IGNORE INTO wiki_links (from_page_id, to_page_id) VALUES (?, ?)'
+      ).bind(id, (targetPage as any).id).run()
+    }
+  }
+
+  // 4. Vectorize
+  const embedding = await c.env.AI.run('@cf/baai/bge-small-en-v1.5', { text: [content] })
+  const values = embedding.data[0]
+  await c.env.VECTORIZE_INDEX.upsert([{ id, values, metadata: { title, slug } }])
+
+  return c.json({ message: 'Scribble saved and vectorized.', id, slug })
+})
 
 app.get('/', (c) => {
   return c.text('Odyssey LLM Wiki API is online.')

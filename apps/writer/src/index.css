@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  background-color: #000000;
+  color: #64ffda;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+}
+
+/* Custom MD Editor Theme */
+.wmde-markdown-var {
+  --color-canvas-default: #000000;
+  --color-fg-default: #64ffda;
+  --color-border-default: #0b0b0b;
+}
+
+.w-md-editor {
+  background-color: #000000 !important;
+  color: #64ffda !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.w-md-editor-toolbar {
+  background-color: #0b0b0b !important;
+  border-bottom: 1px solid #0b0b0b !important;
+  color: #64ffda !important;
+}
+
+.w-md-editor-content {
+  background-color: #000000 !important;
+}
+
+/* Custom Focus Ring */
+*:focus {
+  outline: 1px solid #64ffda;
+  outline-offset: 2px;
+}
