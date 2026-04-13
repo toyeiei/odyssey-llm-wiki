@@ -1,6 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-background: #000000;
+  --color-surface: #0b0b0b;
+  --color-terminal: #64ffda;
+  --color-accent: #bb86fc;
+  --font-mono: "JetBrains Mono", monospace;
+}
 
 :root {
   background-color: #000000;

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import MDEditor from '@uiw/react-md-editor'
-import { Share2, Save, X, Globe } from 'lucide-react'
+import { Save, X, Globe } from 'lucide-react'
 import ForceGraph2D from 'react-force-graph-2d'
 
 function App() {
