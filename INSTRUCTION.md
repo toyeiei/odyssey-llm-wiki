@@ -9,12 +9,16 @@ Ensure your local services are active:
 - **Ingestor:** `npm run dev`
 
 ## 2. Program Your "Brain" (Layer 3)
-You are the architect. You can re-program your AI agent's personality and reasoning without touching code.
+You are the architect. You can re-program your AI agent's personality, reasoning, and **LLM Provider** without touching code.
 1. Open the app (`http://localhost:5173`).
 2. Press **CTRL+K** and search for **"Brain Instructions"**.
 3. Click **Edit**.
-4. Define your agent's persona. Example: *"You are a concise researcher. Prioritize technical depth and always create [[wikilinks]] for core concepts."*
-5. **Save** to apply your new instructions instantly.
+4. To switch models, add or update the `ActiveModel:` line. Examples:
+    - `ActiveModel: gpt-4o` (OpenAI)
+    - `ActiveModel: gemini-1.5-pro` (Google)
+    - `ActiveModel: claude-3-5-sonnet-20240620` (Anthropic)
+5. Define your agent's persona. Example: *"You are a concise researcher. Prioritize technical depth and always create [[wikilinks]] for core concepts."*
+6. **Save** to apply your new instructions and model selection instantly.
 
 ## 3. Ingest Your Knowledge (Layer 1)
 1. Press **CTRL+B** to open the Ingestion sidebar.

@@ -153,7 +153,12 @@ app.post('/api/pages/:slug', async (c) => {
 // Endpoint to initialize the Karpathy-native structure (Core files)
 app.post('/api/init', async (c) => {
   const coreFiles = [
-    { title: 'Brain Instructions', slug: 'brain-instruction', key: 'brain/instruction.md', content: '# Odyssey Brain\nYou are a world-class bookkeeper.' },
+    { 
+      title: 'Brain Instructions', 
+      slug: 'brain-instruction', 
+      key: 'brain/instruction.md', 
+      content: `# Odyssey Brain\nActiveModel: claude-3-5-sonnet-20240620\n\nYou are a world-class bookkeeper for the Odyssey LLM Wiki.` 
+    },
     { title: 'Wiki Index', slug: 'wiki-index', key: 'wiki/index.md', content: '# Wiki Index\nWelcome to your knowledge base.' },
     { title: 'Audit Log', slug: 'wiki-log', key: 'wiki/log.md', content: '# Audit Log\nRecord of all ingestion runs.' }
   ]

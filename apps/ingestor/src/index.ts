@@ -4,8 +4,9 @@ export interface Env {
   WIKI_PAGES: R2Bucket
   VECTORIZE_INDEX: VectorizeIndex
   AI: any
-  OPENAI_API_KEY: string
   ANTHROPIC_API_KEY: string
+  OPENAI_API_KEY: string
+  GEMINI_API_KEY: string
 }
 
 async function getEmbedding(text: string, env: Env): Promise<number[]> {
@@ -13,7 +14,7 @@ async function getEmbedding(text: string, env: Env): Promise<number[]> {
   return result.data[0]
 }
 
-async function callLLM(prompt: string, env: Env): Promise<string> {
+async function callAnthropic(prompt: string, env: Env, model: string): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -22,13 +23,61 @@ async function callLLM(prompt: string, env: Env): Promise<string> {
       'content-type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'claude-3-5-sonnet-20240620',
+      model: model || 'claude-3-5-sonnet-20240620',
       max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }]
     })
   })
   const data: any = await res.json()
   return data.content[0].text
+}
+
+async function callOpenAI(prompt: string, env: Env, model: string): Promise<string> {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: model || 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 4000
+    })
+  })
+  const data: any = await res.json()
+  return data.choices[0].message.content
+}
+
+async function callGemini(prompt: string, env: Env, model: string): Promise<string> {
+  const apiModel = model || 'gemini-1.5-pro'
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:generateContent?key=${env.GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        maxOutputTokens: 4000
+      }
+    })
+  })
+  const data: any = await res.json()
+  return data.candidates[0].content.parts[0].text
+}
+
+async function callLLM(prompt: string, model: string, env: Env): Promise<string> {
+  console.log(`Routing request to: ${model}`)
+  if (model.includes('claude')) {
+    return callAnthropic(prompt, env, model)
+  } else if (model.includes('gpt')) {
+    return callOpenAI(prompt, env, model)
+  } else if (model.includes('gemini')) {
+    return callGemini(prompt, env, model)
+  }
+  // Default to Anthropic if unrecognized
+  return callAnthropic(prompt, env, 'claude-3-5-sonnet-20240620')
 }
 
 function splitIntoChapters(text: string): string[] {
@@ -87,6 +136,10 @@ export default {
           const brainObj = await env.WIKI_PAGES.get('brain/instruction.md')
           const brainPolicy = brainObj ? await brainObj.text() : 'You are a world-class bookkeeper for the Odyssey LLM Wiki.'
           
+          // Parse ActiveModel from brain instructions
+          const modelMatch = brainPolicy.match(/^ActiveModel:\s*(.+)$/m)
+          const activeModel = modelMatch ? modelMatch[1].trim() : 'claude-3-5-sonnet-20240620'
+
           const indexObj = await env.WIKI_PAGES.get('wiki/index.md')
           const currentIndex = indexObj ? await indexObj.text() : '# Wiki Index'
 
@@ -119,7 +172,7 @@ export default {
             4. Return ONLY the Markdown content.
           `
 
-          const synthesizedMarkdown = await callLLM(prompt, env)
+          const synthesizedMarkdown = await callLLM(prompt, activeModel, env)
           
           // 4. Storage & D1
           const titleMatch = synthesizedMarkdown.match(/^# (.+)/)
