@@ -1,0 +1,21 @@
+{
+  "name": "odyssey-llm-wiki",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w apps/api",
+    "dev:frontend": "npm run dev -w apps/frontend",
+    "dev:ingestor": "npm run dev -w apps/ingestor",
+    "deploy:api": "npm run deploy -w apps/api",
+    "deploy:frontend": "npm run deploy -w apps/frontend",
+    "deploy:ingestor": "npm run deploy -w apps/ingestor"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

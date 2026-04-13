@@ -1,0 +1,146 @@
+:root {
+  --bg: #fafafa;
+  --fg: #1a1a1a;
+  --accent: #0070f3;
+  --sidebar-bg: #ffffff;
+  --border: #eaeaea;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.zen-header {
+  margin-bottom: 3rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
+}
+
+.zen-header h1 {
+  font-size: 2.5rem;
+  font-weight: 300;
+  margin: 0;
+}
+
+.zen-header p {
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: #666;
+  margin: 0.5rem 0 0;
+}
+
+.zen-main {
+  display: flex;
+  gap: 3rem;
+}
+
+.zen-sidebar {
+  flex: 1;
+  max-width: 300px;
+}
+
+.zen-sidebar h3 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #999;
+  margin-bottom: 1rem;
+}
+
+.upload-section {
+  margin-bottom: 2rem;
+}
+
+.upload-section input {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.upload-section button {
+  background: var(--fg);
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.upload-section button:disabled {
+  opacity: 0.5;
+}
+
+.pages-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pages-section li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.pages-section li:hover {
+  color: var(--accent);
+}
+
+.pages-section li.active {
+  font-weight: bold;
+}
+
+.zen-content {
+  flex: 3;
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  min-height: 500px;
+}
+
+.wiki-content h2 {
+  font-weight: 400;
+  font-size: 2rem;
+  margin-top: 0;
+}
+
+.markdown-render {
+  line-height: 1.7;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.welcome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  font-weight: 300;
+  font-size: 1.2rem;
+}
+
+.sources-footer {
+  margin-top: 3rem;
+  color: #666;
+}
+
+.sources-footer h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.sources-footer ul {
+  font-size: 0.9rem;
+}
