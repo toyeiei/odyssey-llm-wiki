@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import GraphView from './GraphView'
 
 interface Page {
   id: string
@@ -13,6 +14,7 @@ function App() {
   const [selectedPage, setSelectedPage] = useState<any>(null)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [isGraphView, setIsGraphView] = useState(false)
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787'
 
@@ -52,62 +54,74 @@ function App() {
     const res = await fetch(`${API_URL}/api/pages/${slug}`)
     const data = await res.json()
     setSelectedPage(data)
+    setIsGraphView(false) // Switch back to page view when a page is selected from the graph
   }
 
   return (
     <div className="container">
       <header className="zen-header">
-        <h1>Odyssey LLM Wiki</h1>
+        <div className="header-top">
+          <h1>Odyssey LLM Wiki</h1>
+          <button className="toggle-btn" onClick={() => setIsGraphView(!isGraphView)}>
+            {isGraphView ? 'Wiki View' : 'Graph View'}
+          </button>
+        </div>
         <p>A persistent, compounding knowledge base.</p>
       </header>
 
       <main className="zen-main">
-        <aside className="zen-sidebar">
-          <section className="upload-section">
-            <h3>Ingest Source</h3>
-            <form onSubmit={handleUpload}>
-              <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              <button type="submit" disabled={uploading || !file}>
-                {uploading ? 'Processing...' : 'Upload'}
-              </button>
-            </form>
-          </section>
+        {isGraphView ? (
+          <GraphView onNodeClick={selectPage} apiUrl={API_URL} />
+        ) : (
+          <>
+            <aside className="zen-sidebar">
+              <section className="upload-section">
+                <h3>Ingest Source</h3>
+                <form onSubmit={handleUpload}>
+                  <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                  <button type="submit" disabled={uploading || !file}>
+                    {uploading ? 'Processing...' : 'Upload'}
+                  </button>
+                </form>
+              </section>
 
-          <section className="pages-section">
-            <h3>Wiki Pages</h3>
-            <ul>
-              {pages.map((p) => (
-                <li key={p.id} onClick={() => selectPage(p.slug)} className={selectedPage?.page?.slug === p.slug ? 'active' : ''}>
-                  {p.title}
-                </li>
-              ))}
-            </ul>
-          </section>
-        </aside>
-
-        <article className="zen-content">
-          {selectedPage ? (
-            <div className="wiki-content">
-              <h2>{selectedPage.page.title}</h2>
-              <div className="markdown-render">
-                {selectedPage.content}
-              </div>
-              <footer className="sources-footer">
-                <hr />
-                <h4>Sources:</h4>
+              <section className="pages-section">
+                <h3>Wiki Pages</h3>
                 <ul>
-                  {selectedPage.sources.map((s: any) => (
-                    <li key={s.id}>{s.name}</li>
+                  {pages.map((p) => (
+                    <li key={p.id} onClick={() => selectPage(p.slug)} className={selectedPage?.page?.slug === p.slug ? 'active' : ''}>
+                      {p.title}
+                    </li>
                   ))}
                 </ul>
-              </footer>
-            </div>
-          ) : (
-            <div className="welcome">
-              Select a page or upload a new source to begin.
-            </div>
-          )}
-        </article>
+              </section>
+            </aside>
+
+            <article className="zen-content">
+              {selectedPage ? (
+                <div className="wiki-content">
+                  <h2>{selectedPage.page.title}</h2>
+                  <div className="markdown-render">
+                    {selectedPage.content}
+                  </div>
+                  <footer className="sources-footer">
+                    <hr />
+                    <h4>Sources:</h4>
+                    <ul>
+                      {selectedPage.sources.map((s: any) => (
+                        <li key={s.id}>{s.name}</li>
+                      ))}
+                    </ul>
+                  </footer>
+                </div>
+              ) : (
+                <div className="welcome">
+                  Select a page or upload a new source to begin.
+                </div>
+              )}
+            </article>
+          </>
+        )}
       </main>
     </div>
   )

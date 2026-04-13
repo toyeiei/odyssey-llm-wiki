@@ -24,6 +24,22 @@ app.get('/api/pages', async (c) => {
   return c.json({ pages: results })
 })
 
+// Endpoint to fetch graph data (nodes and links)
+app.get('/api/graph', async (c) => {
+  const pages = await c.env.DB.prepare(
+    'SELECT id, title as name, slug FROM wiki_pages'
+  ).all()
+  
+  const links = await c.env.DB.prepare(
+    'SELECT from_page_id as source, to_page_id as target FROM wiki_links'
+  ).all()
+
+  return c.json({
+    nodes: pages.results,
+    links: links.results
+  })
+})
+
 // Get single page and its related sources
 app.get('/api/pages/:slug', async (c) => {
   const slug = c.req.param('slug')
