@@ -15,7 +15,7 @@
     "test": "npm run test -ws"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0",
+    "wrangler": "^4.81.1",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   }

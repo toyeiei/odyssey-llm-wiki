@@ -1,6 +1,6 @@
 name = "odyssey-llm-wiki-ingestor"
 main = "src/index.ts"
-compatibility_date = "2024-04-03"
+compatibility_date = "2026-04-13"
 
 [[queues.consumers]]
 queue = "odyssey-llm-wiki-ingestion-queue"
