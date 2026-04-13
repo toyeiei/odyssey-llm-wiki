@@ -12,7 +12,7 @@ This project is a persistent, compounding knowledge base built on Cloudflare inf
 - **AI:** External APIs (OpenAI/Anthropic) for reasoning, Cloudflare Workers AI for embeddings.
 
 ## Core Mandates
-- **TDD (Test-Driven Development):** Always write tests for new features. Use Vitest.
+- **TDD (Test-Driven Development):** We follow a strict "Test, Build, Refine" cycle. No feature is considered complete without accompanying tests that provide high coverage. Use Vitest for all packages.
 - **Zero Technical Debt:** Maintain clean, modular code. Refactor proactively.
 - **Zen Aesthetic:** Keep the UI minimalist, focus on content and typography.
 - **Automated Bookkeeping:** The LLM should handle link management, summarization, and consistency checks (linting).
