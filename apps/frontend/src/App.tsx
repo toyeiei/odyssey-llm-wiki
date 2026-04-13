@@ -132,8 +132,23 @@ function App() {
       <main className="zen-main">
         {isSidebarOpen && <div className="palette-overlay" style={{ background: 'transparent', zIndex: 80 }} onClick={() => setIsSidebarOpen(false)}></div>}
         <aside className={`zen-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-          <section className="upload-section">
-            <h3>Ingest Source</h3>
+          <section className="control-center">
+            <h3 style={{ color: 'var(--accent)', fontSize: '0.7rem', letterSpacing: '0.1rem' }}>CONTROL CENTER</h3>
+            <ul>
+              <li onClick={() => selectPage('brain-instruction')} className={selectedPage?.page?.slug === 'brain-instruction' ? 'active' : ''}>
+                Brain Instructions
+              </li>
+              <li onClick={() => selectPage('wiki-index')} className={selectedPage?.page?.slug === 'wiki-index' ? 'active' : ''}>
+                Wiki Index
+              </li>
+              <li onClick={() => selectPage('wiki-log')} className={selectedPage?.page?.slug === 'wiki-log' ? 'active' : ''}>
+                Audit Log
+              </li>
+            </ul>
+          </section>
+
+          <section className="upload-section" style={{ marginTop: '2rem' }}>
+            <h3 style={{ fontSize: '0.7rem', letterSpacing: '0.1rem' }}>INGEST SOURCE</h3>
             <form onSubmit={handleUpload}>
               <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
               <button type="submit" disabled={uploading || !file}>
@@ -142,10 +157,12 @@ function App() {
             </form>
           </section>
 
-          <section className="pages-section">
-            <h3>Wiki Pages</h3>
+          <section className="pages-section" style={{ marginTop: '2rem' }}>
+            <h3 style={{ fontSize: '0.7rem', letterSpacing: '0.1rem' }}>WIKI PAGES</h3>
             <ul>
-              {pages.map((p) => (
+              {pages
+                .filter(p => !['brain-instruction', 'wiki-index', 'wiki-log'].includes(p.slug))
+                .map((p) => (
                 <li key={p.id} onClick={() => selectPage(p.slug)} className={selectedPage?.page?.slug === p.slug ? 'active' : ''}>
                   {p.title}
                 </li>
