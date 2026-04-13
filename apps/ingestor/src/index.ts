@@ -14,7 +14,6 @@ async function getEmbedding(text: string, env: Env): Promise<number[]> {
 }
 
 async function callLLM(prompt: string, env: Env): Promise<string> {
-  // Using Anthropic as the primary reasoning engine for world-class synthesis
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -32,6 +31,37 @@ async function callLLM(prompt: string, env: Env): Promise<string> {
   return data.content[0].text
 }
 
+function splitIntoChapters(text: string): string[] {
+  // 1. Try to detect obvious chapter headers
+  const chapterPattern = /(?:\n|^)(Chapter|CHAPTER|Section|SECTION)\s+([\dIVXLC]+)/g
+  const matches = [...text.matchAll(chapterPattern)]
+  
+  if (matches.length > 1) {
+    const chapters: string[] = []
+    for (let i = 0; i < matches.length; i++) {
+      const start = matches[i].index!
+      const end = matches[i + 1] ? matches[i + 1].index : text.length
+      chapters.push(text.slice(start, end))
+    }
+    return chapters
+  }
+
+  // 2. Fallback to semantic chunking (15,000 chars with 2,000 char overlap)
+  const chunkSize = 15000
+  const overlap = 2000
+  const chunks: string[] = []
+  let offset = 0
+  
+  while (offset < text.length) {
+    const end = Math.min(offset + chunkSize, text.length)
+    chunks.push(text.slice(offset, end))
+    if (end === text.length) break
+    offset += (chunkSize - overlap)
+  }
+  
+  return chunks
+}
+
 export default {
   async queue(batch: MessageBatch<any>, env: Env): Promise<void> {
     for (const message of batch.messages) {
@@ -42,91 +72,96 @@ export default {
         message.ack()
         continue
       }
-      const rawText = await r2Object.text()
+      const fullText = await r2Object.text()
       await env.DB.prepare('UPDATE sources SET status = "processing" WHERE id = ?').bind(sourceId).run()
 
       try {
-        // 1. Fetch Brain Policy & Wiki State
-        const brainObj = await env.WIKI_PAGES.get('brain/instruction.md')
-        const brainPolicy = brainObj ? await brainObj.text() : 'You are a world-class bookkeeper for the Odyssey LLM Wiki.'
-        
-        const indexObj = await env.WIKI_PAGES.get('wiki/index.md')
-        const currentIndex = indexObj ? await indexObj.text() : '# Wiki Index'
+        // 1. Split into Chapters
+        const chapters = splitIntoChapters(fullText)
+        console.log(`Split source into ${chapters.length} segments.`)
 
-        // 2. Context Discovery
-        const queryVector = await getEmbedding(rawText.slice(0, 1000), env)
-        const vectorResults = await env.VECTORIZE_INDEX.query(queryVector, { topK: 5 })
-        
-        const existingPages = await env.DB.prepare(
-          'SELECT title, slug FROM wiki_pages'
-        ).all()
-        const pageList = existingPages.results.map((p: any) => `- ${p.title} (slug: ${p.slug})`).join('\n')
-
-        // 3. Synthesize with LLM (Instruction-Driven)
-        const prompt = `
-          ${brainPolicy}
-
-          CURRENT WIKI INDEX:
-          ${currentIndex}
-
-          NEW SOURCE CONTENT:
-          "${rawText.slice(0, 10000)}"
-
-          EXISTING WIKI PAGES:
-          ${pageList}
-
-          INSTRUCTIONS:
-          1. Analyze the new source against the current wiki.
-          2. Generate a new Markdown document for this insight.
-          3. Automatically insert wiki-links using [[Page Title]] syntax.
-          4. Return ONLY the Markdown content for the NEW page.
-        `
-
-        const synthesizedMarkdown = await callLLM(prompt, env)
-        
-        // 4. Update Storage
-        const titleMatch = synthesizedMarkdown.match(/^# (.+)/)
-        const title = titleMatch ? titleMatch[1] : `Untitled Insight ${sourceId.slice(0, 8)}`
-        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-        const pageId = crypto.randomUUID()
-        const contentKey = `wiki/${pageId}.md`
-
-        await env.WIKI_PAGES.put(contentKey, synthesizedMarkdown)
-        await env.DB.prepare(
-          'INSERT INTO wiki_pages (id, title, content_key, slug) VALUES (?, ?, ?, ?)'
-        ).bind(pageId, title, contentKey, slug).run()
-        
-        await env.DB.prepare(
-          'INSERT INTO source_wiki_mapping (source_id, wiki_page_id) VALUES (?, ?)'
-        ).bind(sourceId, pageId).run()
-
-        // 5. Update Index & Log (Programmatic Bookkeeping)
-        const newIndex = currentIndex + `\n- [[${title}]] (Added ${new Date().toISOString().split('T')[0]})`
-        await env.WIKI_PAGES.put('wiki/index.md', newIndex)
-        
-        const logEntry = `\n[${new Date().toISOString()}] Synthesized [[${title}]] from ${sourceKey}`
-        const logObj = await env.WIKI_PAGES.get('wiki/log.md')
-        const currentLog = logObj ? await logObj.text() : '# Audit Log'
-        await env.WIKI_PAGES.put('wiki/log.md', currentLog + logEntry)
-
-        // 6. Automatic Link Extraction
-        const linkMatches = [...synthesizedMarkdown.matchAll(/\[\[(.+?)\]\]/g)]
-        for (const match of linkMatches) {
-          const targetTitle = match[1]
-          const targetPage = await env.DB.prepare(
-            'SELECT id FROM wiki_pages WHERE title = ?'
-          ).bind(targetTitle).first()
+        for (let i = 0; i < chapters.length; i++) {
+          const chapterText = chapters[i]
           
-          if (targetPage) {
-            await env.DB.prepare(
-              'INSERT OR IGNORE INTO wiki_links (from_page_id, to_page_id) VALUES (?, ?)'
-            ).bind(pageId, (targetPage as any).id).run()
+          // 2. Fetch Context (Recursive Discovery)
+          const brainObj = await env.WIKI_PAGES.get('brain/instruction.md')
+          const brainPolicy = brainObj ? await brainObj.text() : 'You are a world-class bookkeeper for the Odyssey LLM Wiki.'
+          
+          const indexObj = await env.WIKI_PAGES.get('wiki/index.md')
+          const currentIndex = indexObj ? await indexObj.text() : '# Wiki Index'
+
+          const queryVector = await getEmbedding(chapterText.slice(0, 1000), env)
+          const vectorResults = await env.VECTORIZE_INDEX.query(queryVector, { topK: 5 })
+          
+          const existingPages = await env.DB.prepare('SELECT title, slug FROM wiki_pages').all()
+          const pageList = existingPages.results.map((p: any) => `- ${p.title} (slug: ${p.slug})`).join('\n')
+
+          // 3. Synthesize Chapter
+          const prompt = `
+            ${brainPolicy}
+
+            CONTEXT:
+            You are processing Part ${i + 1} of ${chapters.length} from "${sourceKey.split('/').pop()}".
+
+            CURRENT WIKI INDEX:
+            ${currentIndex}
+
+            CHAPTER CONTENT:
+            "${chapterText}"
+
+            EXISTING WIKI PAGES:
+            ${pageList}
+
+            INSTRUCTIONS:
+            1. Analyze this segment.
+            2. Generate a new Markdown wiki page.
+            3. Automatically insert [[Page Title]] syntax for links.
+            4. Return ONLY the Markdown content.
+          `
+
+          const synthesizedMarkdown = await callLLM(prompt, env)
+          
+          // 4. Storage & D1
+          const titleMatch = synthesizedMarkdown.match(/^# (.+)/)
+          const title = titleMatch ? titleMatch[1] : `Segment ${i + 1} from ${sourceKey.split('/').pop()}`
+          const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+          const pageId = crypto.randomUUID()
+          const contentKey = `wiki/${pageId}.md`
+
+          await env.WIKI_PAGES.put(contentKey, synthesizedMarkdown)
+          await env.DB.prepare(
+            'INSERT INTO wiki_pages (id, title, content_key, slug) VALUES (?, ?, ?, ?)'
+          ).bind(pageId, title, contentKey, slug).run()
+          
+          await env.DB.prepare(
+            'INSERT INTO source_wiki_mapping (source_id, wiki_page_id) VALUES (?, ?)'
+          ).bind(sourceId, pageId).run()
+
+          // 5. Update Index & Log
+          const newIndex = currentIndex + `\n- [[${title}]] (Part ${i + 1} of ${chapters.length})`
+          await env.WIKI_PAGES.put('wiki/index.md', newIndex)
+          
+          const logEntry = `\n[${new Date().toISOString()}] Synthesized [[${title}]] (Segment ${i + 1}/${chapters.length}) from ${sourceKey}`
+          const logObj = await env.WIKI_PAGES.get('wiki/log.md')
+          const currentLog = logObj ? await logObj.text() : '# Audit Log'
+          await env.WIKI_PAGES.put('wiki/log.md', currentLog + logEntry)
+
+          // 6. Link Extraction
+          const linkMatches = [...synthesizedMarkdown.matchAll(/\[\[(.+?)\]\]/g)]
+          for (const match of linkMatches) {
+            const targetTitle = match[1]
+            const targetPage = await env.DB.prepare('SELECT id FROM wiki_pages WHERE title = ?').bind(targetTitle).first()
+            if (targetPage) {
+              await env.DB.prepare('INSERT OR IGNORE INTO wiki_links (from_page_id, to_page_id) VALUES (?, ?)')
+                .bind(pageId, (targetPage as any).id).run()
+            }
           }
+
+          // 7. Vectorize
+          const finalEmbedding = await getEmbedding(synthesizedMarkdown, env)
+          await env.VECTORIZE_INDEX.upsert([{ id: pageId, values: finalEmbedding, metadata: { title, slug } }])
         }
 
-        // 7. Finalize
-        const finalEmbedding = await getEmbedding(synthesizedMarkdown, env)
-        await env.VECTORIZE_INDEX.upsert([{ id: pageId, values: finalEmbedding, metadata: { title, slug } }])
         await env.DB.prepare('UPDATE sources SET status = "completed" WHERE id = ?').bind(sourceId).run()
 
       } catch (err) {
